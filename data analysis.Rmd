@@ -1,0 +1,119 @@
+---
+title: Research on the Influence of Online Influencer live Streaming on the Purchase
+  Intention of Customers
+author: "Kaiwen Zhou"
+date: "29/04/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(readr)
+library(ggplot2)
+library(knitr)
+
+
+d_oils <- read_csv('../data_analysis_data.csv')
+
+```
+
+#demographic characteristic of this sample 
+
+## gender
+```{r}
+d_oils %>%
+  count(gender)
+
+d_oils %>%
+  ggplot(aes(x = gender)) + 
+  geom_bar()
+
+```
+## Age 
+
+```{R}
+d_oils %>%
+  count(age_range)
+
+
+d_oils %>%
+  ggplot(aes(x = age_range)) + 
+  geom_bar()
+
+```
+
+## Descriptive statisitics : Likert items
+```{r}
+
+d_oils$A1 %>% median()
+
+oils_likert_variable_median <- d_oils %>%
+  select('Charm1','Charm2','Charm3','Interactivity1','Interactivity2','Interactivity3','Incentive1','Incentive2','Incentive3','Intention1','Intention2') %>%
+  lapply(
+    median
+  )
+
+
+d_oils_likert_variable_sammary <- tibble(
+  Measurement_Question_Item = oils_likert_variable_median %>% names,
+  Median = oils_likert_variable_median %>% unlist)
+
+d_oils_likert_variable_sammary %>%
+  ggplot(
+    aes(x = Measurement_Question_Item, y = Median)
+  ) +
+  geom_point() +
+  coord_flip()
+
+
+        
+```
+
+
+#dummy variables & summary statistics
+
+```{r}
+
+d_oils <-d_oils %>%
+  mutate(
+    Female = gender == 'Female',
+    Charmone = Charm1 >3 
+  )
+
+summary(d_oils$Female)
+
+summary(d_oils$Charmone)
+
+d_oils %>%
+  xtabs(~Female + Charmone,.)  #contingence table#
+
+d_oils %>%
+  count(Female, Charmone)
+
+d_oils %>%
+  group_by(Female) %>%
+  summarise(
+    n = n(),
+    Mdn = median(Charm1)
+  )
+ 
+d_oils %>%
+  group_by(Female) %>%
+  summarise(
+    n = n(),
+    Agree = sum(Charm1 > 3)) %>%
+  mutate(
+    Proportion = round(Agree / n * 100)
+  )
+
+
+```
+
+# chi-test
+
+```{r}
+
+
+```
