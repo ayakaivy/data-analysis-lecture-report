@@ -11,8 +11,12 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(dplyr)
 library(readr)
+library(psych)
 library(ggplot2)
 library(knitr)
+
+
+options(scipen = 999)
 
 
 d_oils <- read_csv('../data_analysis_data.csv')
@@ -111,9 +115,139 @@ d_oils %>%
 
 ```
 
-# chi-test
+# group scoring likert sacle
 
 ```{r}
+
+keys_list <- list(
+  Personal_Charm = c(
+    'Charm1',
+    'Charm2',
+    'Charm3'
+  ),
+  Interactivity = c(
+    'Interactivity1',
+    'Interactivity2',
+    'Interactivity3'
+  ),
+  Incentive = c(
+    'Incentive1',
+    'Incentive2',
+    'Incentive3'
+  ),
+  Purchase_Intention = c(
+    'Intention1',
+    'Intention2'
+  )
+)
+
+scoreItems(
+  keys = keys_list,
+  items = d_oils,
+  totals = FALSE,
+  missing = TRUE,
+  impute = 'none'  
+  
+)     #对个变量的每组scale进行可信度打分
+
+
+d_oils_scores <- scoreItems(
+  keys = keys_list,
+  items = d_oils,
+  totals = FALSE,
+  missing = TRUE,
+  impute = 'none'  
+  
+) 
+
+d_oils_scores$G6 #可信度score#
+
+d_oils <- cbind(d_oils, d_oils_scores$scores)
+
+
+```
+
+#some more visualization
+
+```{r}
+d_oils %>%
+  ggplot(aes(x = Purchase_Intention, fill = Female))+
+  geom_histogram(binwidth = (0.5))
+
+
+
+```
+
+```{r}
+
+d_oils %>%
+  ggplot(aes(x = Personal_Charm, y=Purchase_Intention))+
+  geom_point()
+
+d_oils %>%
+  ggplot(aes(x = Personal_Charm, y=Purchase_Intention, colour = Female))+
+  geom_jitter()
+
+```
+
+#correlation  t-test 
+
+```{r}
+
+d_oils %>%
+  t.test (
+    Purchase_Intention ~ Female,
+    var.equal = FALSE,
+    data = .
+  )
+
+
+d_oils %>%
+  mutate(Female = Female %>% as.numeric()) %>%
+  cor.test(~ Purchase_Intention + Female, data=.)   # pearson correlation
+
+   
+
+d_oils %>%
+  cor.test(~ Personal_Charm + Purchase_Intention, data=.)  #Personal_Charm
+
+d_oils %>%
+  cor.test(~ Interactivity + Purchase_Intention, data=.) #Interactivity
+
+d_oils %>%
+  cor.test(~ Incentive + Purchase_Intention, data=.) #Incentives
+
+
+```
+
+
+# liner model 单个变量
+
+```{r}
+
+d_oils %>%
+  lm(Personal_Charm ~ Purchase_Intention, data =.) %>%
+  summary()
+
+d_oils %>%
+  lm(Interactivity ~ Purchase_Intention, data =.) %>%
+  summary()
+
+d_oils %>%
+  lm(Incentive ~ Purchase_Intention, data =.) %>%
+  summary()
+
+
+```
+
+
+#liner model 多个变量
+
+```{r}
+
+d_oils %>%
+  lm(Purchase_Intention ~ Personal_Charm + Interactivity + Incentive, data =.) %>%
+  summary()
 
 
 ```
